@@ -1,0 +1,27 @@
+# ENV
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Dependencies (falls später Composer genutzt wird)
+vendor/
+composer.lock
+
+# User uploads (falls später hinzugefügt)
+uploads/
+ROADMAP.md
+Zukunftsideen.md
+docs/user-management.md

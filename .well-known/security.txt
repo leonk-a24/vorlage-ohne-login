@@ -1,0 +1,4 @@
+Contact: mailto:kontakt@{{FULL_DOMAIN}}
+Expires: 2027-08-10
+Canonical: https://{{FULL_DOMAIN}}/.well-known/security.txt
+Preferred-Languages: de, en
