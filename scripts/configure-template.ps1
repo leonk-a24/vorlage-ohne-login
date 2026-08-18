@@ -1,13 +1,12 @@
 param()
 
 # Edit these three values once for a new tool.
-$Subdomain = "<subdomain>"
-$Domain = "etari.eu"
+$Domain = "<etari.eu>"
 $ToolName = "<Toolname>"
 
 # Optional infrastructure defaults.
-$GithubOwner = "leonk-a24"
-$AuthDbName = "Hestia_Admin_users"
+$GithubOwner = "Adrians-Name"
+$GithubRepo = "<Toolname>"
 $TrustedProxies = "10.0.1.96"
 
 function Assert-Configured {
@@ -32,47 +31,34 @@ function Convert-ToToolSlug {
     return $slug
 }
 
-Assert-Configured -Name "Subdomain" -Value $Subdomain
 Assert-Configured -Name "Domain" -Value $Domain
 Assert-Configured -Name "ToolName" -Value $ToolName
 
-$ToolSlug = Convert-ToToolSlug $Subdomain
-$FullDomain = "$Subdomain.$Domain"
+$ToolSlug = Convert-ToToolSlug $ToolName
+$FullDomain = "$Domain"
 $AppBaseUrl = "https://$FullDomain"
-$UserManagementUrl = "https://users.$Domain"
 $ToolDbName = $ToolSlug
-$ToolUsersTable = "${ToolSlug}_users"
-$ToolAdminColumn = "is_${ToolSlug}_admin"
-$GitRemoteUrl = "https://github.com/$GithubOwner/$Subdomain.git"
+$GitRemoteUrl = "https://github.com/$GithubOwner/$GithubRepo.git"
 
 $Replacements = [ordered]@{
-    "{{SUBDOMAIN}}" = $Subdomain
     "{{DOMAIN}}" = $Domain
     "{{FULL_DOMAIN}}" = $FullDomain
     "{{TOOL_NAME}}" = $ToolName
     "{{TOOL_SLUG}}" = $ToolSlug
     "{{TOOL_DB_NAME}}" = $ToolDbName
-    "{{TOOL_USERS_TABLE}}" = $ToolUsersTable
-    "{{TOOL_ADMIN_COLUMN}}" = $ToolAdminColumn
     "{{APP_BASE_URL}}" = $AppBaseUrl
-    "{{USER_MANAGEMENT_URL}}" = $UserManagementUrl
     "{{GIT_REMOTE_URL}}" = $GitRemoteUrl
-    "{{AUTH_DB_NAME}}" = $AuthDbName
     "{{TRUSTED_PROXIES}}" = $TrustedProxies
 }
 
 $Root = Split-Path -Parent $PSScriptRoot
 $Files = @(
     "README.md",
-    ".env.example",
     "setup.sql",
     "X DKIM_Setup.md",
     "X GIT_Setup.md",
     "X DB_Setup.md",
-    "X CapRover_ENV_Setup.md",
-    "X overview_user-management.md",
-    ".well-known/security.txt",
-    "images/site.webmanifest"
+    ".well-known/security.txt"
 )
 
 foreach ($RelativePath in $Files) {
@@ -96,4 +82,3 @@ Write-Host "  Tool:       $ToolName"
 Write-Host "  URL:        $AppBaseUrl"
 Write-Host "  Tool slug:  $ToolSlug"
 Write-Host "  Tool DB:    $ToolDbName"
-Write-Host "  Auth table: $ToolUsersTable"

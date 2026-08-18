@@ -10,8 +10,6 @@ if (!defined('INIT_LOADED')) {
         define('BASE_PATH', $_SERVER['DOCUMENT_ROOT']);
     }
 
-    require_once BASE_PATH . '/includes/auth.php';
     require_once BASE_PATH . '/includes/mail_config.php';
-
-    $currentUser = initAuth();
+    require_once BASE_PATH . '/includes/db.php';
 }

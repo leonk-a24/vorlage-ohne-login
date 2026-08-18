@@ -4,7 +4,6 @@ Dieses Dokument beschreibt DKIM fuer eine neue Tool-Subdomain.
 
 Werte:
 
-- Subdomain: `{{SUBDOMAIN}}`
 - Domain: `{{DOMAIN}}`
 - Full Domain: `{{FULL_DOMAIN}}`
 
@@ -55,7 +54,7 @@ Zone: `{{DOMAIN}}`
 
 | Typ | Name | Wert |
 |---|---|---|
-| TXT | `mail._domainkey.{{SUBDOMAIN}}` | `v=DKIM1; h=sha256; k=rsa; p=<PUBLIC_KEY>` |
+| TXT | `mail._domainkey` | `v=DKIM1; h=sha256; k=rsa; p=<PUBLIC_KEY>` |
 
 Den `<PUBLIC_KEY>` aus `mail.txt` entnehmen und alle Teile in Anfuehrungszeichen ohne Leerzeichen zusammenfuehren.
 

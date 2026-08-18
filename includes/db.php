@@ -2,25 +2,6 @@
 
 require_once __DIR__ . '/config.php';
 
-function getAuthPdo(): PDO {
-    static $authPdo = null;
-
-    if ($authPdo !== null) {
-        return $authPdo;
-    }
-
-    $authPdo = createConfiguredPdo(
-        appEnv('AUTH_DB_HOST', 'localhost'),
-        appEnv('AUTH_DB_PORT', '3306'),
-        appEnv('AUTH_DB_NAME', 'Hestia_Admin_users'),
-        appEnv('AUTH_DB_USER', 'root'),
-        appEnv('AUTH_DB_PASS', ''),
-        'AUTH_DB'
-    );
-
-    return $authPdo;
-}
-
 function getToolPdo(): PDO {
     static $toolPdo = null;
 
@@ -82,6 +63,7 @@ function createPdoWithRetry(string $dsn, string $user, string $pass, array $opti
 
     throw new RuntimeException("{$dbName} connection failed");
 }
+
 
 function getToolSetting(string $name, ?string $default = null): ?string {
     try {

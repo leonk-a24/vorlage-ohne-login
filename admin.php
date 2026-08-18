@@ -1,36 +1,14 @@
 <?php
 require_once __DIR__ . '/includes/init.php';
 
-requirePageAuth();
-
-$userId = (int)$currentUser['id'];
-$isGlobal = !empty($currentUser['is_global_admin']);
-$isAppAdmin = isAdmin($currentUser);
-
-if (!$isAppAdmin && !$isGlobal) {
+$isAppAdmin = 1; // Hier auf 1 setzen, um die Admin-Seite zu aktivieren. In einer echten Anwendung sollte dies durch eine Authentifizierung überprüft werden.
+if (!$isAppAdmin) {
     http_response_code(403);
     die('Zugriff verweigert. Nur Administratoren.');
 }
 
-$authPdo = getAuthPdo();
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    $targetUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
-
-    if ($action === 'toggle_approve' && $targetUserId && $targetUserId !== $userId) {
-        setToolApproval($authPdo, $targetUserId, (int)$_POST['new_status'], $userId);
-        invalidateUserCache();
-        header('Location: /admin.php?msg=user_updated');
-        exit;
-    }
-
-    if ($action === 'toggle_tool_admin' && $targetUserId && $targetUserId !== $userId) {
-        setToolAdmin($authPdo, $targetUserId, (int)$_POST['new_status'], $userId);
-        invalidateUserCache();
-        header('Location: /admin.php?msg=admin_updated');
-        exit;
-    }
 
     if ($action === 'update_settings') {
         setToolSetting('allow_self_registration', isset($_POST['allow_self_registration']) ? '1' : '0');
@@ -39,35 +17,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-try {
-    $usersTable = sqlIdentifier(toolUsersTable());
-    $adminColumn = sqlIdentifier(toolAdminColumn());
-    $stmt = $authPdo->query("
-        SELECT u.id, u.username, u.email, u.is_global_admin, u.created_at,
-               COALESCE(tu.{$adminColumn}, 0) AS is_tool_admin,
-               COALESCE(tu.is_approved, 0) AS is_approved
-        FROM users u
-        LEFT JOIN {$usersTable} tu ON tu.user_id = u.id
-        ORDER BY u.created_at DESC
-    ");
-    $users = $stmt->fetchAll();
-} catch (PDOException $e) {
-    error_log('Admin user list failed: ' . $e->getMessage());
-    $users = $authPdo->query("
-        SELECT id, username, email, is_global_admin, created_at,
-               0 AS is_tool_admin, 0 AS is_approved
-        FROM users
-        ORDER BY created_at DESC
-    ")->fetchAll();
-}
-
 $allowSelfRegistration = isSelfRegistrationAllowed();
 $messages = [
-    'user_updated' => 'Benutzerstatus aktualisiert',
-    'admin_updated' => 'Admin-Status aktualisiert',
     'settings_updated' => 'Einstellungen gespeichert',
 ];
+
+<?php
+
+// Nur Testdaten – nicht für eine echte Benutzerverwaltung.
+$users = [
+    [
+        'id'              => 1,
+        'username'        => 'Käptn_Kartoffel',
+        'email'           => 'kartoffel@reibekuchen.invalid',
+        'is_approved'     => true,
+        'is_global_admin' => true,
+        'is_tool_admin'   => false,
+    ],
+    [
+        'id'              => 2,
+        'username'        => 'Sir_Pupsalot',
+        'email'           => 'windmaschine@quatsch.invalid',
+        'is_approved'     => true,
+        'is_global_admin' => false,
+        'is_tool_admin'   => true,
+    ],
+    [
+        'id'              => 3,
+        'username'        => 'Bratwurst-Orakel',
+        'email'           => 'prophezeiung@senf.invalid',
+        'is_approved'     => false,
+        'is_global_admin' => false,
+        'is_tool_admin'   => false,
+    ],
+    [
+        'id'              => 4,
+        'username'        => 'Professor_Unfug',
+        'email'           => 'wissenschaft@blödsinn.invalid',
+        'is_approved'     => true,
+        'is_global_admin' => false,
+        'is_tool_admin'   => false,
+    ],
+    [
+        'id'              => 5,
+        'username'        => 'Günther_vom_Mond',
+        'email'           => 'kaese@mondbasis.invalid',
+        'is_approved'     => false,
+        'is_global_admin' => false,
+        'is_tool_admin'   => true,
+    ],
+];
+
+$userId = random_int(1, 5);
 ?>
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -87,7 +90,6 @@ $messages = [
             <h1>Admin</h1>
             <p class="subtitle"><?= h(appName()) ?></p>
         </div>
-        <span class="status-badge <?= $isGlobal ? 'badge-global' : 'badge-admin' ?>"><?= $isGlobal ? 'Globaler Admin' : 'Tool-Admin' ?></span>
     </div>
 
     <?php if (isset($_GET['msg'])): ?>
@@ -105,9 +107,9 @@ $messages = [
             <button type="submit" class="btn btn-primary">Speichern</button>
         </form>
     </section>
-
     <section class="card panel">
-        <h2>Benutzerverwaltung (<?= count($users) ?>)</h2>
+        <h2>Benutzerverwaltung (<?= count($users) ?> völlig seriöse Gestalten)</h2>
+
         <div class="table-wrap">
             <table class="data-table">
                 <thead>
@@ -117,54 +119,78 @@ $messages = [
                         <th>E-Mail</th>
                         <th>Status</th>
                         <th>Rolle</th>
-                        <th>Aktionen</th>
+                        <th>Sinnlose Aktionen</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     <?php foreach ($users as $u): ?>
-                    <tr>
-                        <td><?= (int)$u['id'] ?></td>
-                        <td><?= h($u['username']) ?></td>
-                        <td><?= h($u['email']) ?></td>
-                        <td><span class="status-badge <?= $u['is_approved'] ? 'badge-active' : 'badge-inactive' ?>"><?= $u['is_approved'] ? 'Aktiv' : 'Wartend' ?></span></td>
-                        <td>
-                            <?php if ($u['is_global_admin']): ?>
-                                <span class="status-badge badge-global">Global</span>
-                            <?php elseif ($u['is_tool_admin']): ?>
-                                <span class="status-badge badge-admin">Tool-Admin</span>
-                            <?php else: ?>
-                                User
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <?php if ((int)$u['id'] === $userId): ?>
-                                Du selbst
-                            <?php elseif ($u['is_global_admin'] && !$isGlobal): ?>
-                                Globaler Admin
-                            <?php else: ?>
-                                <div class="action-row">
-                                    <form method="POST">
-                                        <input type="hidden" name="action" value="toggle_approve">
-                                        <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>">
-                                        <input type="hidden" name="new_status" value="<?= $u['is_approved'] ? 0 : 1 ?>">
-                                        <button type="submit" class="btn btn-sm <?= $u['is_approved'] ? 'btn-secondary' : 'btn-primary' ?>"><?= $u['is_approved'] ? 'Deaktivieren' : 'Freischalten' ?></button>
-                                    </form>
-                                    <?php if (!$u['is_global_admin']): ?>
-                                        <form method="POST">
-                                            <input type="hidden" name="action" value="toggle_tool_admin">
-                                            <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>">
-                                            <input type="hidden" name="new_status" value="<?= $u['is_tool_admin'] ? 0 : 1 ?>">
-                                            <button type="submit" class="btn btn-secondary btn-sm"><?= $u['is_tool_admin'] ? 'Admin entziehen' : 'Admin machen' ?></button>
-                                        </form>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td><?= (int) $u['id'] ?></td>
+                            <td><?= h($u['username']) ?></td>
+                            <td><?= h($u['email']) ?></td>
+
+                            <td>
+                                <span class="status-badge <?= $u['is_approved']
+                                    ? 'badge-active'
+                                    : 'badge-inactive' ?>">
+                                    <?= $u['is_approved']
+                                        ? 'Darf Quatsch machen'
+                                        : 'Wartet auf Senf' ?>
+                                </span>
+                            </td>
+
+                            <td>
+                                <?php if ($u['is_global_admin']): ?>
+                                    <span class="status-badge badge-global">
+                                        Oberster Quatschminister
+                                    </span>
+                                <?php elseif ($u['is_tool_admin']): ?>
+                                    <span class="status-badge badge-admin">
+                                        Werkzeug-Zauberer
+                                    </span>
+                                <?php else: ?>
+                                    Normaler Unsinnsmensch
+                                <?php endif; ?>
+                            </td>
+
+                            <td>
+                                <?php if ((int) $u['id'] === $userId): ?>
+                                    <span class="status-badge">
+                                        Das bist offenbar du
+                                    </span>
+                                <?php else: ?>
+                                    <div class="action-row">
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-secondary"
+                                            disabled
+                                            title="Dieser Button ist nur Dekoration"
+                                        >
+                                            Konfetti beantragen
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-secondary"
+                                            disabled
+                                            title="Tut absolut nichts"
+                                        >
+                                            Zum Mond befördern
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
+
+        <p class="panel-note">
+            Diese Benutzerverwaltung ist eine Attrappe. Änderungen werden weder
+            gespeichert noch ernst genommen.
+        </p>
     </section>
 </main>
 <?php include $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>

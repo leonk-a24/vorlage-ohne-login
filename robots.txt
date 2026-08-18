@@ -3,6 +3,3 @@ Allow: /
 
 Disallow: admin.php
 Disallow: /includes/
-Disallow: /account/
-Disallow: /errors/
-Disallow: /daten/

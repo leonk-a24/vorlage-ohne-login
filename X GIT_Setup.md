@@ -3,6 +3,10 @@
 Remote: `{{GIT_REMOTE_URL}}`
 
 ```bash
+cd "C:\Pfad\zum\leeren Ordner"
+git clone https://github.com/leonk-a24/vorlage-ohne-login.git .
+Remove-Item -Recurse -Force .git
+
 git init
 git add .
 git commit -m "Initial template setup"
