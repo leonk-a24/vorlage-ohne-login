@@ -22,8 +22,6 @@ $messages = [
     'settings_updated' => 'Einstellungen gespeichert',
 ];
 
-<?php
-
 // Nur Testdaten – nicht für eine echte Benutzerverwaltung.
 $users = [
     [
