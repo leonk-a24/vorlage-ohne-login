@@ -1,4 +1,11 @@
-FROM php:8.2-apache
+FROM php:8.5-apache
+RUN printf '%s\n' \
+    'error_reporting = E_ALL' \
+    'log_errors = On' \
+    'display_errors = Off' \
+    'display_startup_errors = Off' \
+    'error_log = /proc/self/fd/2' \
+    > /usr/local/etc/php/conf.d/zz-logging.ini
 
 RUN apt-get update \
     && apt-get install -y libcurl4-openssl-dev libonig-dev \
